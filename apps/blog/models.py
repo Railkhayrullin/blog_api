@@ -1,11 +1,12 @@
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 
 
 class Category(models.Model):
     """Категории статьи"""
-    name = models.CharField('категория статьи', max_length=255, blank=False)
-    slug = models.SlugField('slug', max_length=255, unique=True, blank=False)
+    name = models.CharField('категория статьи', max_length=255)
+    slug = models.SlugField('slug', max_length=255, unique=True)
     description = models.CharField('описание категории', max_length=1024, blank=True, null=True)
 
     def __str__(self):
@@ -15,6 +16,11 @@ class Category(models.Model):
         verbose_name = 'категория статьи'
         verbose_name_plural = 'категории статьи'
 
+    def save(self, *args, **kwargs):
+        if self.slug == '':
+            self.slug = slugify(self.name, allow_unicode=True)
+        super(Category, self).save(*args, **kwargs)
+
 
 class Post(models.Model):
     """Модель статьи"""
@@ -22,24 +28,22 @@ class Post(models.Model):
         ('draft', 'Черновик'),
         ('published', 'Опубликовано'),
     )
-    category = models.ManyToManyField(
+    categories = models.ManyToManyField(
         Category,
         verbose_name='категория статьи',
         related_name='category_posts',
-        blank=False
     )
-    tag = models.ManyToManyField(
-        'Tags',
+    tags = models.ManyToManyField(
+        'Tag',
         verbose_name='тег статьи',
         related_name='tag_posts',
-        blank=True,
-        null=True
+        blank=True
     )
-    title = models.CharField('заголовок статьи', max_length=255, blank=False)
-    slug = models.SlugField('slug', max_length=255, unique=True, blank=False)
-    content = models.TextField('текст статьи', max_length=10000, blank=False)
+    title = models.CharField('заголовок статьи', max_length=255)
+    slug = models.SlugField('slug', max_length=255, unique=True)
+    content = models.TextField('текст статьи', max_length=10000)
     created_at = models.DateField('дата создания', auto_now=True)
-    update_at = models.DateField('дата обновления', auto_now_add=True)
+    updated_at = models.DateField('дата обновления', auto_now_add=True)
     status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='draft')
 
     def __str__(self):
@@ -48,6 +52,11 @@ class Post(models.Model):
     class Meta:
         verbose_name = 'статья'
         verbose_name_plural = 'статьи'
+
+    def save(self, *args, **kwargs):
+        if self.slug == '':
+            self.slug = slugify(self.title, allow_unicode=True)
+        super(Post, self).save(*args, **kwargs)
 
 
 class Comment(models.Model):
@@ -59,17 +68,17 @@ class Comment(models.Model):
     active = models.BooleanField('активный', default=False)
 
     def __str__(self):
-        return f'Комментарий от {self.user.first_name} к посту {self.post.title}'
+        return f'Комментарий от {self.user} к посту {self.post.title}'
 
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'комментарии'
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     """Модель тегов для статей"""
-    name = models.CharField('тег', max_length=64, blank=False)
-    slug = models.SlugField('slug', max_length=64, blank=False)
+    name = models.CharField('тег', max_length=64)
+    slug = models.SlugField('slug', max_length=64)
 
     def __str__(self):
         return self.name
