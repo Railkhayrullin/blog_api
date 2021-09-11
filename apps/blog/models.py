@@ -83,6 +83,11 @@ class Tag(models.Model):
     name = models.CharField('тег', max_length=64)
     slug = models.SlugField('slug', max_length=64)
 
+    def save(self, *args, **kwargs):
+        if self.slug == '' or not self.slug:
+            self.slug = slugify(self.name, allow_unicode=True)
+        super(Tag, self).save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
