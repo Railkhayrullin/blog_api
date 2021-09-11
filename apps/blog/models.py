@@ -1,13 +1,16 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 from django.utils.text import slugify
 
 
 class Category(models.Model):
     """Категории статьи"""
-    name = models.CharField('категория статьи', max_length=255)
-    slug = models.SlugField('slug', max_length=255, unique=True)
+    name = models.CharField('категория статьи', max_length=64)
+    slug = models.SlugField('slug', max_length=64, unique=True)
     description = models.CharField('описание категории', max_length=1024, blank=True, null=True)
+
+    def get_posts_quantity(self):
+        return self.category_posts.count()
 
     def __str__(self):
         return self.name
@@ -17,7 +20,7 @@ class Category(models.Model):
         verbose_name_plural = 'категории статьи'
 
     def save(self, *args, **kwargs):
-        if self.slug == '':
+        if self.slug == '' or not self.slug:
             self.slug = slugify(self.name, allow_unicode=True)
         super(Category, self).save(*args, **kwargs)
 
@@ -44,7 +47,7 @@ class Post(models.Model):
     content = models.TextField('текст статьи', max_length=10000)
     created_at = models.DateField('дата создания', auto_now=True)
     updated_at = models.DateField('дата обновления', auto_now_add=True)
-    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='draft')
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default='draft', verbose_name='статус')
 
     def __str__(self):
         return self.title

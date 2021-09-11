@@ -25,4 +25,3 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ('tags', 'pk', 'created_at')
     list_filter = ('tags', 'status')
     inlines = (CommentInline,)
-
